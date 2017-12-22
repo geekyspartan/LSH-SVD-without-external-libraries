@@ -52,8 +52,8 @@ def imagesSvd(sddPartition):
     return (Vh, std, mu)
 
 #removes hash keys and check whether needed file exists in a particular hashBucket or not
-def groupSimilarFiles(files):
-    outputFiles = fileList3bPart1.value
+def groupSimilarFiles(files, fileNames):
+    outputFiles = fileNames
     
     res = list()
     for file in outputFiles:
@@ -82,7 +82,7 @@ def lsh(feature_vector):
     
         # taking 120*16 row buckets gives optimum output
         # adding 1, because I want to start my buckets from 1 not from zeroes.
-        row_id = (int(keyString, 2) % (rows*120)) + 1
+        row_id = (int(keyString, 2) % (rows)) + 1
         final_key = int(str(bandNumber) + str(row_id))
         try:
             hash_brackets[final_key].append(feature_vector[0])
@@ -174,46 +174,21 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         directoryPath = sys.argv[1]
     else:
-        directoryPath = "hdfs:/data/large_sample/*"
+        directoryPath = "/Users/anuragarora/Documents/GitHub/LSH-SVD-without-external-libraries/sampleimages/*"
 
-    files3bPart1 = [r'3677454_2025195.zip-0', r'3677454_2025195.zip-1', r'3677454_2025195.zip-18', r'3677454_2025195.zip-19']
-    files3bPart2 = [r'3677454_2025195.zip-1',r'3677454_2025195.zip-18']
-    fileList3bPart1 = sc.broadcast(files3bPart1)
-    fileList3bPart2 = sc.broadcast(files3bPart2)
-    
-    outputFileTxt = open("a2_arora_output.txt","w")
+    #unzip the zip file and use it
+
+    outputFileTxt = open("sample_output.txt","w")
     pairRdd = sc.binaryFiles(directoryPath)
     fileNames = pairRdd.keys().map(lambda x: x[x.rfind('/') + 1:])  #get file names
 
     singleRdd = pairRdd.flatMap(lambda file: getOrthoTif(file[0], file[1]))
-    singleRdd.persist()
-    
-    #q1 start
-    outputFiles1 = fileList3bPart1.value
-    output = singleRdd.filter(lambda a: a[0] in outputFiles1).mapValues(lambda x : x[0][0]).collect()
-    print("**********    Q1    **********")
-    print(output)
-    print("*****************************")
-    outputFileTxt.write("\n**********    Q1    **********\n")
-    outputFileTxt.write(str(output))
-    #q1 end
-    
-    #q2 start
-    outputFiles2 = fileList3bPart2.value
+
     featureVectorOfImages = singleRdd.mapValues(lambda x : intensityCalculation(x))
-    featureVectorOfImages.persist()
-    printStuff = featureVectorOfImages.filter(lambda a: a[0] in outputFiles2).collect()
-    print("\n\n\n\n\n***********    Q2     ******************\n")
-    print(printStuff)
-    print("*****************************")
-    outputFileTxt.write("\n\n\n\n\n***********    Q2     ******************\n")
-    outputFileTxt.write(str(printStuff))
-    #q2 end
-    
-    #q3 start
-    #run for all 4 files and then filter for two files
+
+    allFileNames = featureVectorOfImages.keys().map(lambda x: x[x.rfind('/') + 1:]).collect()
     output = featureVectorOfImages.mapValues(lambda x: createSignature(x)).flatMap(lambda x: lsh(x)).groupByKey().mapValues(list)
-    output = output.filter(lambda a: outputFiles1[0] in a[1] or outputFiles1[1] in a[1] or outputFiles1[2] in a[1] or outputFiles1[3] in a[1]).flatMap(lambda x: groupSimilarFiles(x[1])).groupByKey().filter(lambda x: x[0] in outputFiles2).mapValues(lambda x: list(set(list(set().union(*x)))))
+    output = output.flatMap(lambda x: groupSimilarFiles(x[1], allFileNames)).groupByKey().mapValues(lambda x: list(set(list(set().union(*x)))))
     
     output.persist()
     
@@ -221,11 +196,6 @@ if __name__ == "__main__":
     for item in output.collect():
         similarFilesDict[item[0]] = item[1]
 
-    outputFileTxt.write("\n\n\n\n\n************    Q3 b     *****************\n")
-    outputFileTxt.write(str(similarFilesDict))
-    print("\n\n************    Q3 b     *****************\n\n")
-
-    #q3 part 3c
     similarFilesList = {x for v in similarFilesDict.values() for x in v}
     similarFilesList |= set(similarFilesDict.keys())
     listSample = featureVectorOfImages.takeSample(False, 10)
@@ -233,14 +203,14 @@ if __name__ == "__main__":
     svdRdd = featureVectorOfImages.mapValues(lambda x: calculateSvdFromVH(x, vh, mu, std)).filter(lambda a: a[0] in similarFilesList)
     lowDimensionImages = svdRdd.collect()
 
-    print("\n\n************    Q3 c     *****************\n")
+    print("\n\n************    Similarity     *****************\n")
 
     lowDimensionImagesDict = dict()
     for item in lowDimensionImages:
         lowDimensionImagesDict[item[0]] = item[1]
 
     distance = dict()
-    outputFileTxt.write("\n\n\n\n\n************    Q3 c     *****************\n")
+    outputFileTxt.write("\n************    Similarity     *****************\n")
     eDistance = 0
     for reference,images in similarFilesDict.items():
         for img in images:
