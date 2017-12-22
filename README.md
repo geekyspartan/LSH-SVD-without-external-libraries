@@ -18,4 +18,4 @@ Test by tweeking number of bands, signature length, hash function. Checkout [Sam
 
 Sample image was provided during BIG DATA Assignment.
 Please refer the image before using it.
-Preferrably contact my Professor before using this sample images: [H. Andrew Schwartz] (http://www3.cs.stonybrook.edu/~has/)
+Preferrably contact my Professor before using this sample images: (http://www3.cs.stonybrook.edu/~has/)
