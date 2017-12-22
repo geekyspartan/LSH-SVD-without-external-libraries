@@ -14,4 +14,4 @@ intensity = int(rgb_mean * (infrared/100))
 8. Apply LSH and find sub-images similarity.
 
 
-Test by tweeking number of bands, signature length, hash function. Checkout [Sample Output](https://github.com/techiepanda/SVD-LSH-no-libraries/blob/master/output.txt)
+Test by tweeking number of bands, signature length, hash function. Checkout [Sample Output](https://github.com/geekyspartan/LSH-SVD-without-external-libraries/blob/master/sample_output.txt)
