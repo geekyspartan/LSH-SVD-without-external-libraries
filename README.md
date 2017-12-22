@@ -15,3 +15,7 @@ intensity = int(rgb_mean * (infrared/100))
 
 
 Test by tweeking number of bands, signature length, hash function. Checkout [Sample Output](https://github.com/geekyspartan/LSH-SVD-without-external-libraries/blob/master/sample_output.txt)
+
+Sample image was provided during BIG DATA Assignment.
+Please refer the image before using it.
+Preferrably contact my Professor before using this sample images: [H. Andrew Schwartz] (http://www3.cs.stonybrook.edu/~has/)
