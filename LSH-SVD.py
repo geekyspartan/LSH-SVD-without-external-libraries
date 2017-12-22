@@ -180,7 +180,6 @@ if __name__ == "__main__":
 
     outputFileTxt = open("sample_output.txt","w")
     pairRdd = sc.binaryFiles(directoryPath)
-    fileNames = pairRdd.keys().map(lambda x: x[x.rfind('/') + 1:])  #get file names
 
     singleRdd = pairRdd.flatMap(lambda file: getOrthoTif(file[0], file[1]))
 
@@ -189,8 +188,6 @@ if __name__ == "__main__":
     allFileNames = featureVectorOfImages.keys().map(lambda x: x[x.rfind('/') + 1:]).collect()
     output = featureVectorOfImages.mapValues(lambda x: createSignature(x)).flatMap(lambda x: lsh(x)).groupByKey().mapValues(list)
     output = output.flatMap(lambda x: groupSimilarFiles(x[1], allFileNames)).groupByKey().mapValues(lambda x: list(set(list(set().union(*x)))))
-    
-    output.persist()
     
     similarFilesDict = dict()
     for item in output.collect():
